@@ -1,0 +1,7 @@
+openssl req -x509 -subj "/C=DE/ST=RLP/L=Woerth/O=tls-example-org/CN=tls-example-ca" -days 1000 -newkey rsa -keyout tls-example-ca.key -passout pass:tls-example -out tls-example-ca.crt
+
+openssl req -subj "/C=DE/ST=RLP/L=Woerth/O=tls-example-org/CN=tls-example-server" -newkey rsa -keyout tls-example-server.key -passout pass:tls-example -out tls-example-server.req
+openssl x509 -req -in tls-example-server.req -CA tls-example-ca.crt -CAkey tls-example-ca.key -passin pass:tls-example -CAcreateserial -days 1000 -out tls-example-server.crt
+
+openssl req -subj "/C=DE/ST=RLP/L=Woerth/O=tls-example-org/CN=tls-example-client-1" -newkey rsa -keyout tls-example-client-1.key -passout pass:tls-example -out tls-example-client-1.req
+openssl x509 -req -in tls-example-client-1.req -CA tls-example-ca.crt -CAkey tls-example-ca.key -passin pass:tls-example -CAcreateserial -days 1000 -out tls-example-client-1.crt
