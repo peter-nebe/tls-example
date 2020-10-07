@@ -116,7 +116,6 @@ public:
   : acceptor(ioctx, tcp::endpoint(tcp::v4(), port)),
     sslctx(ssl::context::tlsv13_server)
   {
-    sslctx.set_options(ssl::context::default_workarounds);
     sslctx.set_password_callback([](size_t, ssl::context::password_purpose){ return "tls-example"s; });
     sslctx.use_private_key_file("tls-example-server.key", ssl::context::pem);
     sslctx.use_certificate_file("tls-example-server.crt", ssl::context::pem);
