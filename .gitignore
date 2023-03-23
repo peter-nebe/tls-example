@@ -1,0 +1,10 @@
+.settings
+.cproject
+.project
+/client debug/
+/server debug/
+build
+*.crt
+*.key
+*.srl
+*.req
