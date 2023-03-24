@@ -1,0 +1,7 @@
+#!/bin/sh
+
+RPI=root@RPI1.localdomain
+TA=9c3163cf-39f4-4da3-8129-1c26f5be5a88.ta
+
+scp build/client ${RPI}:
+scp build/client-ta/${TA} ${RPI}:/lib/optee_armtz/

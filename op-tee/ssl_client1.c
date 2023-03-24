@@ -24,40 +24,22 @@
 #endif
 
 #include "mbedtls/platform.h"
-
-/*
-#if !defined(MBEDTLS_BIGNUM_C) || !defined(MBEDTLS_ENTROPY_C) ||  \
-    !defined(MBEDTLS_SSL_TLS_C) || !defined(MBEDTLS_SSL_CLI_C) || \
-    !defined(MBEDTLS_NET_C) || !defined(MBEDTLS_RSA_C) ||         \
-    !defined(MBEDTLS_CERTS_C) || !defined(MBEDTLS_PEM_PARSE_C) || \
-    !defined(MBEDTLS_CTR_DRBG_C) || !defined(MBEDTLS_X509_CRT_PARSE_C)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_BIGNUM_C and/or MBEDTLS_ENTROPY_C and/or "
-           "MBEDTLS_SSL_TLS_C and/or MBEDTLS_SSL_CLI_C and/or "
-           "MBEDTLS_NET_C and/or MBEDTLS_RSA_C and/or "
-           "MBEDTLS_CTR_DRBG_C and/or MBEDTLS_X509_CRT_PARSE_C "
-           "not defined.\n");
-    mbedtls_exit( 0 );
-}
-#else
-*/
-
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
-#include "mbedtls/certs.h"
-
 #include <string.h>
 
 #define SERVER_PORT "4433"
 #define SERVER_NAME "192.167.1.1"
-#define GET_REQUEST "GET / HTTP/1.0\r\n\r\n"
-
+#define CERT_HOST_NAME "tls-example-server"
+#define GET_REQUEST "Hello from TA how are you dude?"
 #define DEBUG_LEVEL 1
+
+extern const char tls_example_ca[];
+extern const size_t tls_example_ca_len;
 
 
 #define EXIT_FAILURE  1
@@ -68,7 +50,7 @@ static void my_debug( void *ctx, int level,
                       const char *file, int line,
                       const char *str )
 {
-  ((void) ctx);
+    ((void) ctx);
     ((void) level);
 
 //    mbedtls_fprintf( (FILE *) ctx, "%s:%04d: %s", file, line, str );
@@ -79,7 +61,7 @@ static void my_debug( void *ctx, int level,
 int ssl_client1(void);
 int ssl_client1( void )
 {
-    int ret = 1, len;
+    int ret = 1, len, len_to_receive;
     int exit_code = MBEDTLS_EXIT_FAILURE;
     mbedtls_net_context server_fd;
     uint32_t flags;
@@ -125,8 +107,7 @@ int ssl_client1( void )
     mbedtls_printf( "  . Loading the CA root certificate ..." );
     fflush( stdout );
 
-    ret = mbedtls_x509_crt_parse( &cacert, (const unsigned char *) mbedtls_test_cas_pem,
-                          mbedtls_test_cas_pem_len );
+    ret = mbedtls_x509_crt_parse( &cacert, (const unsigned char *) tls_example_ca, tls_example_ca_len );
     if( ret < 0 )
     {
         mbedtls_printf( " failed\n  !  mbedtls_x509_crt_parse returned -0x%x\n\n", (unsigned int) -ret );
@@ -180,7 +161,7 @@ int ssl_client1( void )
         goto exit;
     }
 
-    if( ( ret = mbedtls_ssl_set_hostname( &ssl, SERVER_NAME ) ) != 0 )
+    if( ( ret = mbedtls_ssl_set_hostname( &ssl, CERT_HOST_NAME ) ) != 0 )
     {
         mbedtls_printf( " failed\n  ! mbedtls_ssl_set_hostname returned %d\n\n", ret );
         goto exit;
@@ -242,7 +223,7 @@ int ssl_client1( void )
     }
 
     len = ret;
-    mbedtls_printf( " %d bytes written\n\n%s", len, (char *) buf );
+    mbedtls_printf( " %d bytes written\n\n%s\n", len, (char *) buf );
 
     /*
      * 7. Read the HTTP response
@@ -250,11 +231,11 @@ int ssl_client1( void )
     mbedtls_printf( "  < Read from server:" );
     fflush( stdout );
 
+    len_to_receive = len;
     do
     {
-        len = sizeof( buf ) - 1;
         memset( buf, 0, sizeof( buf ) );
-        ret = mbedtls_ssl_read( &ssl, buf, len );
+        ret = mbedtls_ssl_read( &ssl, buf, len_to_receive );
 
         if( ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE )
             continue;
@@ -275,9 +256,9 @@ int ssl_client1( void )
         }
 
         len = ret;
-        mbedtls_printf( " %d bytes read\n\n%s", len, (char *) buf );
+        mbedtls_printf( " %d bytes read\n\n%s\n", len, (char *) buf );
     }
-    while( 1 );
+    while( len < len_to_receive );
 
     mbedtls_ssl_close_notify( &ssl );
 
@@ -309,9 +290,3 @@ exit:
 
     return( exit_code );
 }
-/*
-#endif  MBEDTLS_BIGNUM_C && MBEDTLS_ENTROPY_C && MBEDTLS_SSL_TLS_C &&
-          MBEDTLS_SSL_CLI_C && MBEDTLS_NET_C && MBEDTLS_RSA_C &&
-          MBEDTLS_CERTS_C && MBEDTLS_PEM_PARSE_C && MBEDTLS_CTR_DRBG_C &&
-          MBEDTLS_X509_CRT_PARSE_C
-*/

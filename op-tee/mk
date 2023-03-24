@@ -17,6 +17,6 @@ make \
   CROSS_COMPILE64=${CC} \
   TA_DEV_KIT_DIR=${OPTEEOS_DIR}/out/arm-plat-rpi4/export-ta_arm64 \
   CFG_TA_ASLR=n \
-  CFG_TEE_TA_LOG_LEVEL=4 \
+  CFG_TEE_TA_LOG_LEVEL=3 \
   DEBUG=1 \
   O=build/client-ta
