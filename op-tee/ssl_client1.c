@@ -30,6 +30,7 @@
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
+#include "trace.h"
 #include <string.h>
 
 #define SERVER_PORT "4433"

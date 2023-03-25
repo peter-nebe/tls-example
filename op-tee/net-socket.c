@@ -21,6 +21,7 @@
 #include "mbedtls/error.h"
 #include "tee_isocket.h"
 #include "tee_tcpsocket.h"
+#include "trace.h"
 #include <stdlib.h>
 #include <string.h>
 
