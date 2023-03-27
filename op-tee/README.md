@@ -1,7 +1,7 @@
-# TLS client [TA](## "Trusted Application")
+### TLS client [TA](## "Trusted Application")
 This is an example TLS client running in a [TEE](## "Trusted Execution Environment") implemented by [OP-TEE](## "Open Portable TEE").
 
-It was tested on a Raspberry Pi 4 using the server from the [main folder](..) running on a PC. Here is the test run:
+It was tested on a Raspberry Pi 4 using the server from the [main folder](https://github.com/peter-nebe/tls-example) running on a PC. Here is the test run:
 ```
 # ./tls-example-client
 
