@@ -1,3 +1,23 @@
+/*
+ * tls-example
+ * Copyright (c) 2023 Peter Nebe <mail@peter-nebe.dev>
+ *
+ * This file is part of tls-example.
+ *
+ * tls-example is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * tls-example is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with tls-example.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "client-ta.h"
 #include "tee_client_api.h"
 #include <stdexcept>

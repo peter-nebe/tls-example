@@ -1,6 +1,6 @@
 /*
  * tls-example
- * Copyright (c) 2020 Peter Nebe (mail@peter-nebe.dev)
+ * Copyright (c) 2020-2023 Peter Nebe <mail@peter-nebe.dev>
  *
  * This file is part of tls-example.
  *
@@ -32,7 +32,7 @@ class SslContext : public ssl::context
 {
 public:
   SslContext()
-  : ssl::context(ssl::context::tlsv13_client)
+  : ssl::context(ssl::context::tls_client)
   {
     set_password_callback([](size_t, ssl::context::password_purpose){ return "tls-example"s; });
     use_private_key_file("tls-example-client-1.key", ssl::context::pem);
@@ -42,7 +42,7 @@ public:
     set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
     set_verify_callback(ssl::host_name_verification("tls-example-server"));
   }
-};
+}; // class SslContext
 
 class Client
 {
@@ -111,7 +111,7 @@ private:
   ssl::stream<tcp::socket> socket;
   string writebuf;
   string readbuf;
-};
+}; // class Client
 
 int main(int argc, char *argv[])
 {

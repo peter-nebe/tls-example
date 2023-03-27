@@ -1,6 +1,6 @@
 /*
  * tls-example
- * Copyright (c) 2020 Peter Nebe (mail@peter-nebe.dev)
+ * Copyright (c) 2020-2023 Peter Nebe <mail@peter-nebe.dev>
  *
  * This file is part of tls-example.
  *
@@ -92,42 +92,46 @@ private:
   ssl::stream<tcp::socket> socket;
   string readbuf;
   string writebuf;
-};
-
-bool verifyClient(bool preverified, ssl::verify_context &ctx)
-{
-  if(!preverified)
-    return false;
-
-  if(X509_STORE_CTX_get_error_depth(ctx.native_handle()) > 0)
-    return true;
-
-  X509_NAME *subjectName = X509_get_subject_name(X509_STORE_CTX_get_current_cert(ctx.native_handle()));
-  const X509_NAME_ENTRY *nameEntry = X509_NAME_get_entry(subjectName, X509_NAME_get_index_by_NID(subjectName, NID_commonName, -1));
-  const string commonName = reinterpret_cast<const char*>(X509_NAME_ENTRY_get_data(nameEntry)->data);
-
-  return commonName.starts_with("tls-example-client");
-}
+}; // class Session
 
 class Server
 {
 public:
   Server(io_context &ioctx, uint16_t port)
   : acceptor(ioctx, tcp::endpoint(tcp::v4(), port)),
-    sslctx(ssl::context::tlsv13_server)
+    sslctx(ssl::context::tls_server)
   {
     sslctx.set_password_callback([](size_t, ssl::context::password_purpose){ return "tls-example"s; });
     sslctx.use_private_key_file("tls-example-server.key", ssl::context::pem);
     sslctx.use_certificate_file("tls-example-server.crt", ssl::context::pem);
 
+#ifdef NO_CLIENT_AUTHENTICATION
+    sslctx.set_verify_mode(ssl::verify_none);
+#else
     sslctx.load_verify_file("tls-example-ca.crt");
     sslctx.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
     sslctx.set_verify_callback(verifyClient);
+#endif
 
     accept();
   }
 
 private:
+  static bool verifyClient(bool preverified, ssl::verify_context &ctx)
+  {
+    if(!preverified)
+      return false;
+
+    if(X509_STORE_CTX_get_error_depth(ctx.native_handle()) > 0)
+      return true;
+
+    X509_NAME *subjectName = X509_get_subject_name(X509_STORE_CTX_get_current_cert(ctx.native_handle()));
+    const X509_NAME_ENTRY *nameEntry = X509_NAME_get_entry(subjectName, X509_NAME_get_index_by_NID(subjectName, NID_commonName, -1));
+    const string commonName = reinterpret_cast<const char*>(X509_NAME_ENTRY_get_data(nameEntry)->data);
+
+    return commonName.starts_with("tls-example-client");
+  }
+
   void accept()
   {
     acceptor.async_accept([this](const boost::system::error_code &error, tcp::socket sock)
@@ -141,7 +145,7 @@ private:
 
   tcp::acceptor acceptor;
   ssl::context sslctx;
-};
+}; // class Server
 
 int main(int argc, char *argv[])
 {
