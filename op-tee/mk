@@ -11,6 +11,7 @@ ${CC}c++ client.cpp \
   -I${OPTEE_CLIENT_DIR}/public \
   -L${OPTEE_CLIENT_DIR}/libteec \
   -lteec \
+  -std=c++20 \
   -o build/tls-example-client
 
 make \

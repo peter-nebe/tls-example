@@ -22,11 +22,14 @@
 #include "tee_client_api.h"
 #include <stdexcept>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 class TeeClient
 {
   TEEC_Context context;
+  TEEC_Session session;
+  bool sessionOpen = false;
 
 public:
   TeeClient()
@@ -38,12 +41,13 @@ public:
 
   ~TeeClient()
   {
+    if(sessionOpen)
+      TEEC_CloseSession(&session);
     TEEC_FinalizeContext(&context);
   }
 
-  bool invokeCommand(uint32_t commandId)
+  bool openSession()
   {
-    TEEC_Session session;
     const TEEC_UUID uuid = CLIENT_TA_UUID;
     uint32_t errOrigin;
     TEEC_Result res = TEEC_OpenSession(&context, &session, &uuid, TEEC_LOGIN_PUBLIC, NULL, NULL, &errOrigin);
@@ -53,23 +57,75 @@ public:
       return false;
     }
 
-    TEEC_Operation op{};
-    op.paramTypes = TEEC_PARAM_TYPES(TEEC_NONE, TEEC_NONE, TEEC_NONE, TEEC_NONE);
-    res = TEEC_InvokeCommand(&session, commandId, &op, &errOrigin);
-    if (res != TEEC_SUCCESS)
-      cerr << "TEEC_InvokeCommand failed with code 0x" << hex << res << " origin 0x" << errOrigin << endl;
-
-    TEEC_CloseSession(&session);
-
-    return res == TEEC_SUCCESS;
+    sessionOpen = true;
+    return true;
   }
-};
+
+  void closeSession()
+  {
+    if(sessionOpen)
+    {
+      TEEC_CloseSession(&session);
+      sessionOpen = false;
+    }
+  }
+
+  bool doRequest(const string &request, string &response)
+  {
+    if(!sessionOpen)
+      return false;
+
+    TEEC_Operation op{};
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INOUT, TEEC_NONE, TEEC_NONE, TEEC_NONE);
+
+    response = request;
+    op.params[0].tmpref.buffer = response.data();
+    op.params[0].tmpref.size = response.size();
+
+    uint32_t errOrigin;
+    TEEC_Result res = TEEC_InvokeCommand(&session, CLIENT_TA_CMD_REQUEST, &op, &errOrigin);
+    if (res != TEEC_SUCCESS)
+    {
+      cerr << "TEEC_InvokeCommand failed with code 0x" << hex << res << " origin 0x" << errOrigin << endl;
+      return false;
+    }
+
+    if(response.size() > op.params[0].tmpref.size)
+      response.resize(op.params[0].tmpref.size);
+
+    return true;
+  }
+}; // class TeeClient
 
 int main()
 {
+  cout << "open session... " << flush;
+
   TeeClient teeClient;
-  bool success = teeClient.invokeCommand(CLIENT_TA_CMD_SEND);
-  cout << "success: " << boolalpha << success << endl;
+  if(!teeClient.openSession())
+    return 1;
+
+  cout << "ok" << endl;
+
+  const vector<string> requests
+  {
+    "#1 Hello via TA!",
+    "#2 How are you dude?",
+    "#3 What's next?"
+  };
+
+  for(const string &request : requests)
+  {
+    cout << "request: " << request << endl;
+
+    string response;
+    bool success = teeClient.doRequest(request, response);
+    cout << "success: " << boolalpha << success << endl;
+
+    if(success)
+      cout << "response: " << response << endl;
+    cout << endl;
+  }
 
   return 0;
 }
