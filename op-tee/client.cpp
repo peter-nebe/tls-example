@@ -76,11 +76,16 @@ public:
       return false;
 
     TEEC_Operation op{};
-    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INOUT, TEEC_NONE, TEEC_NONE, TEEC_NONE);
+    op.paramTypes = TEEC_PARAM_TYPES(TEEC_MEMREF_TEMP_INPUT, TEEC_MEMREF_TEMP_OUTPUT, TEEC_NONE, TEEC_NONE);
 
-    response = request;
-    op.params[0].tmpref.buffer = response.data();
-    op.params[0].tmpref.size = response.size();
+    // because of the input type, the buffer is not modified
+    op.params[0].tmpref.buffer = const_cast<char*>(request.data());
+    op.params[0].tmpref.size = request.size();
+
+    // we expect our example server to return the same number of characters as it received
+    response.resize(request.size());
+    op.params[1].tmpref.buffer = response.data();
+    op.params[1].tmpref.size = response.size();
 
     uint32_t errOrigin;
     TEEC_Result res = TEEC_InvokeCommand(&session, CLIENT_TA_CMD_REQUEST, &op, &errOrigin);
@@ -90,8 +95,8 @@ public:
       return false;
     }
 
-    if(response.size() > op.params[0].tmpref.size)
-      response.resize(op.params[0].tmpref.size);
+    if(response.size() > op.params[1].tmpref.size)
+      response.resize(op.params[1].tmpref.size);
 
     return true;
   }
@@ -107,10 +112,11 @@ int main()
 
   cout << "ok" << endl;
 
+  // a few example requests
   const vector<string> requests
   {
     "#1 Hello via TA!",
-    "#2 How are you dude?",
+    "#2 Here's some fake news.",
     "#3 What's next?"
   };
 

@@ -26,6 +26,27 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/ssl.h"
 
+/*
+ * Substitute for std::string or std::vector which are not available here
+ */
+struct Buffer
+{
+  uint8_t *const ptr;
+  const size_t bufsize;
+  size_t contsize;
+
+  Buffer(size_t size)
+  : ptr(new uint8_t[size]),
+    bufsize(size),
+    contsize(0)
+  {
+  }
+  ~Buffer()
+  {
+    delete[] ptr;
+  }
+};
+
 class ClientSession
 {
 public:
@@ -33,7 +54,7 @@ public:
   ~ClientSession();
   int open();
   void close();
-  int request(char *buf, size_t *len);
+  int doRequest(const Buffer &request, Buffer &response);
 
 private:
   mbedtls_net_context server_fd;

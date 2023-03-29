@@ -116,40 +116,42 @@ void ClientSession::close()
   state = State::initialized;
 }
 
-int ClientSession::request(char *buf, size_t *len)
+int ClientSession::doRequest(const Buffer &request, Buffer &response)
 {
   if(state != State::open)
     return MBEDTLS_ERR_ERROR_GENERIC_ERROR;
 
   // send to server
   int ret;
-  while((ret = mbedtls_ssl_write(&ssl, reinterpret_cast<unsigned char*>(buf), *len)) <= 0)
+  while((ret = mbedtls_ssl_write(&ssl, request.ptr, request.contsize)) <= 0)
   {
     if(ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE)
       return ret;
   }
 
-  // Receive from server.
-  // We expect our example server to return the same number of characters as it received.
-  const size_t toReceive = ret < *len ? ret : *len;
+  // receive from server
   size_t received = 0;
-
   do
   {
-    ret = mbedtls_ssl_read(&ssl, reinterpret_cast<unsigned char*>(buf) + received, toReceive - received);
+    ret = mbedtls_ssl_read(&ssl, response.ptr + received, response.bufsize - received);
     if(ret == MBEDTLS_ERR_SSL_WANT_READ || ret == MBEDTLS_ERR_SSL_WANT_WRITE)
       continue;
 
-    if(ret <= 0)
+    if(ret < 0)
+      return ret;
+
+    if(ret == 0)
+    {
+      ret = MBEDTLS_ERR_SSL_CONN_EOF;
       break;
+    }
 
     received += ret;
+    ret = 0;
   }
-  while(received < toReceive);
+  while(response.bufsize > received);
 
-  *len = received;
-  if(ret >= 0)
-    ret = received < toReceive ? MBEDTLS_ERR_SSL_CONN_EOF : 0;
+  response.contsize = received;
 
   return ret;
 }
