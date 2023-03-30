@@ -9,7 +9,7 @@ All information coming out of the [REE](## "Rich Execution Environment") is inse
 
 However, some information must be exchanged with the REE, such as in this example the request sent to the server and the response received. It is important to minimize the risks associated with insecure information. For example, the TA could reject a request that it recognized as a fake. However, recognizing a fake is not trivial and rejecting it outright might make it easier for skilled attackers to trick the detection.
 
-Therefore, a different strategy is implemented in this example. This TA does not reject any request, but determines a special confidence measure for each request. This confidence measure is encoded and prepended to the request before it is sent to the server. In this way, the client can communicate any additional security-related information to the server. It is then up to the server how to process the request. It can then develop its own strategy to do so.
+Therefore, a different strategy is implemented in this example. This TA does not reject any request, but determines a special **confidence measure** for each request. This confidence measure is encoded and prepended to the request before it is sent to the server. In this way, the client TA can communicate any additional security-related information to the server. It is then up to the server how to process the request. It can develop its own strategy to do so.
 
 This example is only intended to show the basic principle. If you look at the code, you will see that [determining the confidence measure](client-ta.cpp#L87) is trivial. The server used is also just a dummy that just sends back the words of the request in reverse order, for example:
 ```
