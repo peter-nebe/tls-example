@@ -1,7 +1,7 @@
 ### TLS client [TA](## "Trusted Application")
-This is an example TLS client running in a [TEE](## "Trusted Execution Environment") implemented by [OP-TEE](## "Open Portable TEE").
+This is an example TLS client running in a [TEE](## "Trusted Execution Environment") implemented by [OP-TEE](## "Open Portable TEE"). It basically works like a proxy between a general client in the [REE](## "Rich Execution Environment") and the remote TLS server.
 
-All information coming out of the [REE](## "Rich Execution Environment") is insecure: It can be spied on by unauthorized persons or forged by attackers. The goal is therefore to keep as much of the required information as possible within the TEE. In this example, the following data is fixed in the TA:
+All information coming out of the REE is insecure: It can be spied on by unauthorized persons or forged by attackers. The goal is therefore to keep as much of the required information as possible within the TEE. In this example, the following data is fixed in the TA:
 - the [server name](ClientSession.cpp#L24)
 - the server port number
 - the hostname to check against the received server certificate
